@@ -19,7 +19,7 @@ export default function Home() {
 
   return (
     <main>
-      <p className="eyebrow">Semana 5 · Containerização e CI/CD</p>
+      <p className="eyebrow">AILAB Makers · Do container à nuvem</p>
       <h1>Painel DevOps</h1>
       <section className="card">
         {estado.carregando && <p className="muted">Carregando dados da API...</p>}

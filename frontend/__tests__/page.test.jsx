@@ -31,4 +31,12 @@ describe("Home", () => {
 
     expect(await screen.findByText("Dados indisponíveis")).toBeInTheDocument();
   });
+
+  it("mostra mensagem amigavel quando a API responde 404 (ex.: Firebase Hosting sem backend)", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue({ ok: false, status: 404 });
+
+    render(<Home />);
+
+    expect(await screen.findByText("Dados indisponíveis")).toBeInTheDocument();
+  });
 });

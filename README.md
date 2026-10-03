@@ -122,3 +122,20 @@ firebase projects:list
 ```
 
 Arquivos versionados: `firebase.json`, `.firebaserc`, `firestore.rules`, `firestore.indexes.json`. Logs do Firebase, `.firebase/` e qualquer JSON de conta de serviço estão no `.gitignore`.
+
+## Deploy mais rápido (Etapa 2)
+
+O modo de saída do Next.js é escolhido pela variável `STATIC_EXPORT`:
+
+| Comando | Saída | Usado por |
+|---|---|---|
+| `npm run build` | `.next/standalone` | `Dockerfile.prod` (Semana 5) |
+| `npm run build:static` | `out/` (HTML estático) | Firebase Hosting (Semana 6) |
+
+```bash
+cd frontend && npm run build:static && cd ..
+firebase deploy --only hosting
+curl -I https://<id-do-projeto>.web.app       # HTTP/2 200
+```
+
+Sem backend na nuvem, `/api/health/` não existe no Hosting e a página mostra "Dados indisponíveis" em vez de tela branca.
