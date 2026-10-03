@@ -1,0 +1,74 @@
+# Merge na main: qualidade -> build estatico -> deploy em producao -> teste de fumaca
+name: Deploy no Firebase Hosting (producao)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Nunca dois deploys de producao ao mesmo tempo; o segundo espera o primeiro terminar
+concurrency:
+  group: firebase-hosting-live
+  cancel-in-progress: false
+
+env:
+  FIREBASE_PROJECT_ID: semana6-jpnunes
+
+jobs:
+  qualidade:
+    uses: ./.github/workflows/frontend-qualidade.yml
+
+  build:
+    needs: qualidade
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - name: Export estatico lendo do Firestore
+        run: npm run build:static
+        env:
+          NEXT_PUBLIC_DATA_SOURCE: firestore
+      - uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: frontend/out
+          retention-days: 1
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: site
+          path: frontend/out
+      - name: Deploy no canal live
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SEMANA6_JPNUNES }}
+          projectId: ${{ env.FIREBASE_PROJECT_ID }}
+          channelId: live
+
+  smoke-test:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: curl --fail na URL de producao
+        run: |
+          URL="https://${FIREBASE_PROJECT_ID}.web.app/"
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 --retry-all-errors -o page.html "$URL"
+          grep -q "Painel DevOps" page.html
+          echo "Producao respondendo em $URL"

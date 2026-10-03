@@ -182,3 +182,24 @@ firebase emulators:exec --only firestore "npm --prefix frontend run test:rules"
    ```
 5. Rollback: console > Hosting > Histórico de versões > na versão anterior, menu ⋮ > Reverter.
 6. Na página publicada, o botão "Testar escrita no Firestore" deve responder `Bloqueado: permission-denied`.
+
+## Deploy contínuo com GitHub Actions (Etapa 5)
+
+Configuração única:
+
+```bash
+firebase init hosting:github
+# Repositório: <usuario>/semana5-cicd
+# "Set up the workflow to run a build script before every deploy?"  -> No
+# Quando perguntar se sobrescreve os workflows existentes            -> No
+```
+
+A CLI cria a conta de serviço de deploy e grava a chave como secret `FIREBASE_SERVICE_ACCOUNT_<ID_DO_PROJETO>` no GitHub. Nenhum JSON fica no disco nem no repositório.
+
+| Workflow | Gatilho | Fluxo |
+|---|---|---|
+| `firebase-hosting-pull-request.yml` | pull request | qualidade → build estático → canal de preview (URL comentada no PR) → `curl --fail` |
+| `firebase-hosting-merge.yml` | push na `main` | qualidade → build estático → canal live → `curl --fail` |
+| `frontend-qualidade.yml` | reutilizável | lint → testes do frontend e testes das regras no emulador |
+
+`concurrency` impede dois deploys de produção simultâneos e cancela previews antigos do mesmo PR. O `ci.yml` da Semana 5 continua rodando sem alterações.
