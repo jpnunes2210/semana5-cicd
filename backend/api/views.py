@@ -4,7 +4,7 @@ from django.views.decorators.http import require_GET
 ITEMS = [
     "Configurar Docker",
     "Automatizar CI",
-    "Publicar no GHCR",
+    "Publicar no Docker Hub",
 ]
 
 
