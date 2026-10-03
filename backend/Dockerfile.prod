@@ -1,0 +1,35 @@
+# Imagem de PRODUCAO do backend: Gunicorn em Alpine, usuario sem root
+
+# 1) builder: monta um virtualenv com as dependencias
+FROM python:3.12-alpine AS builder
+ENV PIP_NO_CACHE_DIR=1 PIP_DISABLE_PIP_VERSION_CHECK=1
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+# 2) runtime: copia so o venv e o codigo
+FROM python:3.12-alpine AS runtime
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/opt/venv/bin:$PATH" \
+    DJANGO_DEBUG=False
+
+RUN addgroup -S -g 1001 django && adduser -S -u 1001 -G django django
+
+WORKDIR /app
+COPY --from=builder /opt/venv /opt/venv
+COPY --chown=django:django . .
+
+# Arquivos estaticos do admin servidos pelo WhiteNoise
+RUN python manage.py collectstatic --noinput \
+ && chmod +x docker-entrypoint.sh \
+ && chown -R django:django /app/staticfiles
+
+USER django
+
+EXPOSE 8000
+
+ENTRYPOINT ["./docker-entrypoint.sh"]
+CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--access-logfile", "-"]

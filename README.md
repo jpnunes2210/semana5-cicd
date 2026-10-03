@@ -57,3 +57,16 @@ Rodando localmente:
 cd backend && pip install -r requirements-dev.txt && ruff check . && python manage.py test
 cd frontend && npm ci && npm run lint && npm run build && npm test
 ```
+
+## Imagens de produção (Etapa 4)
+
+```bash
+docker build -f backend/Dockerfile.prod  -t s5-backend:prod  ./backend
+docker build -f frontend/Dockerfile.prod -t s5-frontend:prod ./frontend
+docker images | grep s5-                 # frontend precisa ficar abaixo de 150 MB
+docker run --rm s5-frontend:prod whoami  # nextjs
+docker run --rm --entrypoint whoami s5-backend:prod  # django
+```
+
+- Backend: multi-stage em `python:3.12-alpine`, venv copiado do builder, Gunicorn, WhiteNoise para os estáticos do admin, usuário `django` (uid 1001).
+- Frontend: estágios `deps` → `builder` → `runner`, `output: 'standalone'`, runner copia só `.next/standalone`, `.next/static` e `public`, usuário `nextjs`.

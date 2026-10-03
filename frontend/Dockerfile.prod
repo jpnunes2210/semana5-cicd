@@ -1,0 +1,44 @@
+# Imagem de PRODUCAO do frontend: multi-stage (deps -> builder -> runner)
+
+# 1) deps: instala dependencias exatamente como no lockfile
+FROM node:20-alpine AS deps
+WORKDIR /app
+RUN apk add --no-cache libc6-compat
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# 2) builder: gera o build standalone do Next.js
+FROM node:20-alpine AS builder
+WORKDIR /app
+ENV NEXT_TELEMETRY_DISABLED=1
+# Vazio = o navegador chama /api/... relativo, o Nginx faz o resto
+ARG NEXT_PUBLIC_API_URL=""
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN npm run build
+
+# 3) runner: Alpine puro + Node.js do apk (sem npm, sem yarn, sem fontes, sem devDependencies).
+#    Usar node:20-alpine aqui deixaria a imagem perto de 150 MB, porque apagar o npm
+#    numa camada nova nao remove os arquivos das camadas da imagem base.
+FROM alpine:3.20 AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1 \
+    PORT=3000 \
+    HOSTNAME=0.0.0.0
+
+RUN apk add --no-cache nodejs \
+ && addgroup -S -g 1001 nodejs \
+ && adduser -S -u 1001 -G nodejs nextjs
+
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
+
+EXPOSE 3000
+
+CMD ["node", "server.js"]
