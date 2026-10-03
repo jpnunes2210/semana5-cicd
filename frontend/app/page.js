@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { fetchHealth } from "@/lib/api";
+import { inexistente } from "@/lib/nao-existe";
 
 export default function Home() {
   const [estado, setEstado] = useState({ carregando: true, dados: null, erro: null });
@@ -17,6 +18,7 @@ export default function Home() {
     };
   }, []);
 
+  void inexistente;
   return (
     <main>
       <p className="eyebrow">Semana 5 · Containerização e CI/CD</p>
