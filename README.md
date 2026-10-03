@@ -70,3 +70,22 @@ docker run --rm --entrypoint whoami s5-backend:prod  # django
 
 - Backend: multi-stage em `python:3.12-alpine`, venv copiado do builder, Gunicorn, WhiteNoise para os estáticos do admin, usuário `django` (uid 1001).
 - Frontend: estágios `deps` → `builder` → `runner`, `output: 'standalone'`, runner copia só `.next/standalone`, `.next/static` e `public`, usuário `nextjs`.
+
+## Stack de produção com Nginx e SSL (Etapa 5)
+
+```bash
+./scripts/gerar-certificado.sh               # certificado autoassinado (CN=localhost)
+cp .env.prod.example .env.prod               # senhas reais, fora do Git
+docker compose -f docker-compose-prod.yml up -d --build
+
+curl -I  http://localhost/                   # 301 -> https://localhost/
+curl -k  https://localhost/api/health/       # JSON vindo do Django via Nginx
+curl -kI https://localhost/                  # 200 do Next.js via Nginx
+```
+
+Só o `nginx` publica portas (80 e 443). `backend:8000`, `frontend:3000` e `db:5432` existem apenas na rede `internal`.
+
+| Rota | Destino |
+|---|---|
+| `/api/`, `/admin/`, `/static/` | `backend:8000` (Gunicorn) |
+| `/` | `frontend:3000` (Next.js standalone) |
