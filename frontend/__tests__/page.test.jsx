@@ -39,4 +39,19 @@ describe("Home", () => {
 
     expect(await screen.findByText("Dados indisponíveis")).toBeInTheDocument();
   });
+
+  it("mostra o titulo da Versao B quando NEXT_PUBLIC_APP_VARIANT=b", async () => {
+    vi.stubEnv("NEXT_PUBLIC_APP_VARIANT", "b");
+    vi.resetModules();
+    vi.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: true,
+      json: async () => ({ status: "ok", items: ["a"] }),
+    });
+    const { default: HomeB } = await import("@/app/page");
+
+    render(<HomeB />);
+
+    expect(await screen.findByText("Painel DevOps · Versão B")).toBeInTheDocument();
+    vi.unstubAllEnvs();
+  });
 });

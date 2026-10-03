@@ -166,3 +166,19 @@ Testes automatizados das regras:
 ```bash
 firebase emulators:exec --only firestore "npm --prefix frontend run test:rules"
 ```
+
+## Firestore de produção, Versão B e rollback (Etapa 4)
+
+1. Console do Firebase > Firestore Database > Criar banco no **modo de produção** (plano Spark).
+2. Cole a config web do app em `frontend/lib/firebase-config.js` (ela é pública por design).
+3. Publique as regras e cadastre os 3 itens pelo console (coleção `items`, campos `texto` string e `ordem` número):
+   ```bash
+   firebase deploy --only firestore:rules
+   ```
+4. Produção e Versão B no ar ao mesmo tempo:
+   ```bash
+   ./scripts/deploy-producao.sh     # https://<id>.web.app (canal live)
+   ./scripts/deploy-versao-b.sh     # https://<id>--versao-b-<hash>.web.app (expira em 7 dias)
+   ```
+5. Rollback: console > Hosting > Histórico de versões > na versão anterior, menu ⋮ > Reverter.
+6. Na página publicada, o botão "Testar escrita no Firestore" deve responder `Bloqueado: permission-denied`.

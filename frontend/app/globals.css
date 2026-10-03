@@ -126,3 +126,12 @@ button {
 button:hover {
   border-color: var(--accent);
 }
+
+/* Versao B: destaque em ambar para diferenciar visualmente do canal de producao */
+.versao-b {
+  --accent: #b5651d;
+}
+
+.versao-b h1 {
+  color: var(--accent);
+}

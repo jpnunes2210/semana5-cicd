@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 
 import { DATA_SOURCE, fetchItems, tryWriteItem } from "@/lib/data-source";
 
+// Versao B (canal de pre-visualizacao): titulo e cor de destaque diferentes
+const VERSAO_B = process.env.NEXT_PUBLIC_APP_VARIANT === "b";
+
 export default function Home() {
   const [estado, setEstado] = useState({ carregando: true, dados: null, erro: null });
   const [escrita, setEscrita] = useState(null);
@@ -29,9 +32,9 @@ export default function Home() {
   }
 
   return (
-    <main>
+    <main className={VERSAO_B ? "versao-b" : undefined}>
       <p className="eyebrow">AILAB Makers · Do container à nuvem</p>
-      <h1>Painel DevOps</h1>
+      <h1>{VERSAO_B ? "Painel DevOps · Versão B" : "Painel DevOps"}</h1>
       <section className="card">
         {estado.carregando && <p className="muted">Carregando dados...</p>}
 
