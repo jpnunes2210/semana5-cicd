@@ -28,3 +28,14 @@ docker run --rm -p 3000:3000 \
 ```
 
 Sem `POSTGRES_HOST` definido o backend usa SQLite, então o `/api/health/` responde mesmo sem banco.
+
+## Stack de desenvolvimento com Compose (Etapa 2)
+
+```bash
+cp .env.example .env          # credenciais locais, nunca versionadas
+docker compose up --build     # db sobe primeiro; backend so inicia com o healthcheck verde
+```
+
+- Frontend: http://localhost:3000
+- API: http://localhost:8000/api/health/
+- Dados do PostgreSQL persistem no volume nomeado `postgres_data`
