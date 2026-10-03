@@ -39,3 +39,21 @@ docker compose up --build     # db sobe primeiro; backend so inicia com o health
 - Frontend: http://localhost:3000
 - API: http://localhost:8000/api/health/
 - Dados do PostgreSQL persistem no volume nomeado `postgres_data`
+
+## CI (Etapa 3)
+
+`.github/workflows/ci.yml` roda duas trilhas independentes, cada uma com fail-fast via `needs`:
+
+| Trilha | Jobs | Ferramentas |
+|---|---|---|
+| Backend | `lint-backend` → `build-backend` → `test-backend` | Ruff, `docker build` + `manage.py check`, `manage.py test` com PostgreSQL de serviço |
+| Frontend | `lint-frontend` → `build-frontend` → `test-frontend` | ESLint, `next build`, Vitest + Testing Library |
+
+Cache: `cache: 'pip'` no `setup-python` e `cache: 'npm'` no `setup-node`.
+
+Rodando localmente:
+
+```bash
+cd backend && pip install -r requirements-dev.txt && ruff check . && python manage.py test
+cd frontend && npm ci && npm run lint && npm run build && npm test
+```
