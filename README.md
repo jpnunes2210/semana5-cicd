@@ -89,3 +89,19 @@ Só o `nginx` publica portas (80 e 443). `backend:8000`, `frontend:3000` e `db:5
 |---|---|
 | `/api/`, `/admin/`, `/static/` | `backend:8000` (Gunicorn) |
 | `/` | `frontend:3000` (Next.js standalone) |
+
+## Deploy contínuo no GHCR (Etapa 6)
+
+Em todo push na `main`, depois que a trilha correspondente passa:
+
+| Job | Depende de | Publica |
+|---|---|---|
+| `deploy-backend` | `test-backend` | `ghcr.io/<usuario>/<repo>-backend:latest` e `:<sha>` |
+| `deploy-frontend` | `test-frontend` | `ghcr.io/<usuario>/<repo>-frontend:latest` e `:<sha>` |
+
+Autenticação pelo `GITHUB_TOKEN` do próprio workflow, com `permissions: contents: read, packages: write`. Nenhum segredo extra é necessário.
+
+```bash
+docker pull ghcr.io/<usuario>/<repo>-backend:latest
+docker pull ghcr.io/<usuario>/<repo>-frontend:latest
+```
