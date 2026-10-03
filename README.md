@@ -139,3 +139,30 @@ curl -I https://<id-do-projeto>.web.app       # HTTP/2 200
 ```
 
 Sem backend na nuvem, `/api/health/` não existe no Hosting e a página mostra "Dados indisponíveis" em vez de tela branca.
+
+## Emulator Suite (Etapa 3)
+
+Pré-requisito: Java (JDK 11 ou mais novo), exigido pelo emulador do Firestore.
+
+```bash
+./scripts/emuladores.sh                  # build apontando pro emulador + Hosting, Firestore e UI
+node scripts/seed-emulator.mjs           # (1a vez, em outro terminal) cadastra os 3 itens
+# Ctrl+C no primeiro terminal exporta os dados para firebase/seed (versione essa pasta)
+```
+
+- Página: http://localhost:5000 (lista os itens do emulador)
+- UI: http://localhost:4000 (aba Firestore > Requests mostra leitura permitida e escrita negada)
+- Botão "Testar escrita no Firestore" na página: deve mostrar `Bloqueado: permission-denied`
+
+Fonte de dados do frontend, sem mudar a tela:
+
+| Variável | Valores |
+|---|---|
+| `NEXT_PUBLIC_DATA_SOURCE` | `api` (Django) ou `firestore` |
+| `NEXT_PUBLIC_USE_EMULATOR` | `true` conecta no emulador com `connectFirestoreEmulator` |
+
+Testes automatizados das regras:
+
+```bash
+firebase emulators:exec --only firestore "npm --prefix frontend run test:rules"
+```

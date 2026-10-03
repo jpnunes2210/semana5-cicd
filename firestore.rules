@@ -1,10 +1,12 @@
 rules_version = '2';
 
-// Producao comeca fechada: nada e lido nem gravado ate existir uma regra explicita.
+// Mesmo principio do nivel 3 da Missao Farol: leitura publica, escrita negada.
+// Os itens so sao criados pelo console do Firebase (que ignora as regras).
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if false;
+    match /items/{item} {
+      allow read: if true;
+      allow write: if false;
     }
   }
 }
