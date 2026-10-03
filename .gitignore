@@ -22,3 +22,14 @@ nginx/certs/*.key
 nginx/certs/*.crt
 
 .DS_Store
+
+# Firebase: logs, cache do deploy e qualquer credencial de conta de servico
+firebase-debug.log
+firebase-debug.*.log
+firestore-debug.log
+ui-debug.log
+.firebase/
+*-service-account*.json
+*serviceAccount*.json
+*-firebase-adminsdk-*.json
+credentials*.json

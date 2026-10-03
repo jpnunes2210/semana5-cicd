@@ -105,3 +105,20 @@ Autenticação pelo `GITHUB_TOKEN` do próprio workflow, com `permissions: conte
 docker pull ghcr.io/<usuario>/<repo>-backend:latest
 docker pull ghcr.io/<usuario>/<repo>-frontend:latest
 ```
+
+---
+
+# Semana 6: do container à nuvem (Firebase, custo zero)
+
+A Semana 5 continua intacta. O frontend passa a ter também um modo de **export estático** publicado no Firebase Hosting, com dados no Cloud Firestore, tudo no plano **Spark** (sem cartão).
+
+## Projeto Firebase e CLI (Etapa 1)
+
+```bash
+npm install -g firebase-tools
+firebase login
+./scripts/configurar-projeto.sh <id-do-seu-projeto>   # troca o ID de exemplo semana6-jpnunes
+firebase projects:list
+```
+
+Arquivos versionados: `firebase.json`, `.firebaserc`, `firestore.rules`, `firestore.indexes.json`. Logs do Firebase, `.firebase/` e qualquer JSON de conta de serviço estão no `.gitignore`.
