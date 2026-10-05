@@ -33,7 +33,7 @@ export default function Home() {
 
   return (
     <main className={VERSAO_B ? "versao-b" : undefined}>
-      <p className="eyebrow">AILAB Makers · Do container à nuvem</p>
+      <p className="eyebrow">AILAB Makers · Do container à nuvem · Semana 6</p>
       <h1>{VERSAO_B ? "Painel DevOps · Versão B" : "Painel DevOps"}</h1>
       <section className="card">
         {estado.carregando && <p className="muted">Carregando dados...</p>}
