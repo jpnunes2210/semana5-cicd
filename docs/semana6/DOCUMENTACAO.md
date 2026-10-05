@@ -1,13 +1,14 @@
 # Semana 6 - Do Container a Nuvem (GCP e Firebase)
 
-> Itens marcados com **[PREENCHER]** dependem da sua conta Firebase e do GitHub (URLs, capturas, links de runs). O código e as validações locais já estão prontos.
+> Evidências coletadas em 05/10/2026. As capturas ficam em `docs/semana6/img/`.
 
 ## 1. Identificacao
 
 - **Aluno:** João Paulo Barbosa Pereira Nunes
 - **Repositório:** https://github.com/jpnunes2210/semana5-cicd (mesmo repositório da Semana 5)
-- **URL de produção:** https://semana6-jpnunes.web.app [PREENCHER com o ID real]
-- **URL do canal (Versão B):** https://semana6-jpnunes--versao-b-XXXXXXXX.web.app [PREENCHER]
+- **URL de produção:** https://semana6-jpnunes.web.app
+- **URL do canal (Versão B):** https://semana6-jpnunes--versao-b-bv3t437n.web.app (expira 7 dias após o deploy)
+- **URL de preview do PR #1:** https://semana6-jpnunes--pr1-teste-preview-qa78c8eo.web.app
 
 ## 2. Arquitetura
 
@@ -38,9 +39,13 @@ GitHub ── PR ───> Actions: qualidade → build estático → canal de 
 
 ## 3. Etapa 1 - Projeto e CLI
 
-**Plano Spark (evidência):** [PREENCHER] captura da tela Uso e faturamento do console mostrando "Spark, sem custo".
+**Plano Spark (evidência):**
 
-**Saída do `firebase projects:list`:** [PREENCHER]
+![Plano Spark](img/etapa1-spark.png)
+
+**Saída do `firebase projects:list`:**
+
+![firebase projects:list](img/etapa1-projects-list.png)
 
 **Arquivos de configuração versionados**
 
@@ -82,12 +87,14 @@ output: process.env.STATIC_EXPORT === 'true' ? 'export' : 'standalone',
 ```bash
 cd frontend && npm run build:static && cd ..
 firebase deploy --only hosting
-curl -I https://semana6-jpnunes.web.app     # [PREENCHER] HTTP/2 200
+curl -I https://semana6-jpnunes.web.app     # HTTP/2 200
 ```
 
 Localmente, com `firebase emulators:exec --only hosting`: `GET /` 200 com "Painel DevOps"; `GET /api/health/` 404.
 
-**Tempo (opcional):** [PREENCHER do `git clone` até a URL abrindo].
+![curl na produção](img/etapa2-curl-producao.png)
+
+**Tempo (opcional):** não medido.
 
 **Commit:** [`2b7c3b2`](https://github.com/jpnunes2210/semana5-cicd/commit/2b7c3b2)
 
@@ -131,17 +138,37 @@ Esses testes rodam no CI (job `test-rules`) com `firebase emulators:exec`.
 
 **Leitura permitida / escrita negada:**
 
-- [PREENCHER] Captura de `localhost:5002` listando os 3 itens vindos do emulador.
-- [PREENCHER] Captura do botão "Testar escrita no Firestore" mostrando `Bloqueado: permission-denied`.
-- [PREENCHER] Captura de `localhost:4000` > Firestore > Requests com um `get`/`list` ALLOW e um `create` DENY.
+Página em `localhost:5002` listando os 3 itens do emulador:
 
-**Commit:** [`4581c97`](https://github.com/jpnunes2210/semana5-cicd/commit/4581c97) + [PREENCHER] commit com a pasta `firebase/seed` gerada pelo export.
+![Emulador com os itens](img/etapa3-emulador-itens.png)
+
+Botão "Testar escrita no Firestore" bloqueado pelas regras:
+
+![Escrita negada no emulador](img/etapa3-escrita-negada.png)
+
+Emulator UI > Firestore > Requests com a leitura permitida e a escrita negada:
+
+![Requests no Emulator UI](img/etapa3-requests.png)
+
+Testes automatizados das regras rodando contra o emulador:
+
+![Testes das regras](img/etapa3-testes-regras.png)
+
+No macOS a porta 5000 é ocupada pelo Receptor AirPlay, por isso o emulador de Hosting usa a 5002.
+
+**Commits:** [`4581c97`](https://github.com/jpnunes2210/semana5-cicd/commit/4581c97), [`0548085`](https://github.com/jpnunes2210/semana5-cicd/commit/0548085) (porta 5002) e [`8c3a1e9`](https://github.com/jpnunes2210/semana5-cicd/commit/8c3a1e9) (dados semente exportados em `firebase/seed`)
 
 ## 6. Etapa 4 - Firestore de producao e Versao B
 
-**Regras publicadas:** `firebase deploy --only firestore:rules`. [PREENCHER] saída do comando e captura da aba Regras no console.
+**Regras publicadas:** `firebase deploy --only firestore:rules` terminou com `released rules firestore.rules to cloud.firestore` e `Deploy complete!`.
 
-**Dados de produção:** banco criado em modo de produção no plano Spark; coleção `items` com os 3 documentos cadastrados pelo console. [PREENCHER] captura.
+**Dados de produção:** banco `(default)` criado em modo de produção no plano Spark (`southamerica-east1`), com a coleção `items` e os 3 documentos cadastrados pelo console (campos `texto` string e `ordem` number):
+
+![Firestore com os itens](img/etapa4-firestore-items.png)
+
+**Incidente durante a validação:** no primeiro deploy a produção mostrava "Firestore: ok" com a lista vazia, e o botão de escrita ficava em "Tentando gravar...". A causa era dupla: o app Web não tinha sido registrado (a config ainda tinha os valores de exemplo) e o banco Firestore não existia no projeto, o que o `firebase firestore:databases:list` confirmou com o erro "Cloud Firestore API has not been used". A config foi corrigida no PR [#1](https://github.com/jpnunes2210/semana5-cicd/pull/1), o banco foi criado e os itens cadastrados. A página voltou a listar os dados sem novo deploy, porque a leitura acontece no navegador.
+
+![Produção antes da correção](img/etapa4-producao-antes-da-correcao.png)
 
 **Canal da Versão B:** `NEXT_PUBLIC_APP_VARIANT=b` muda o título para "Painel DevOps · Versão B" e a cor de destaque para âmbar.
 
@@ -150,16 +177,34 @@ Esses testes rodam no CI (job `test-rules`) com `firebase emulators:exec`.
 ./scripts/deploy-versao-b.sh      # firebase hosting:channel:deploy versao-b --expires 7d
 ```
 
-[PREENCHER] as duas URLs no ar ao mesmo tempo (capturas lado a lado).
+Produção (esquerda) e canal da Versão B (direita) no ar ao mesmo tempo:
 
-**Escrita negada em produção:** botão "Testar escrita no Firestore" na URL publicada. [PREENCHER] captura com `Bloqueado: permission-denied`.
+![Versão A e Versão B](img/etapa4-versao-a-e-b.png)
+
+Produção depois do merge do PR #1:
+
+![Produção](img/etapa4-producao.png)
+
+**Escrita negada em produção:** botão "Testar escrita no Firestore" respondendo `Bloqueado: permission-denied`:
+
+![Escrita negada em produção](img/etapa4-escrita-negada-prod.png)
 
 **Rollback:** Hosting > Histórico de versões > versão anterior > Reverter.
 
 | Momento | Versão ativa no live | Evidência |
 |---|---|---|
-| Antes | [PREENCHER] | [captura] |
-| Depois do rollback | [PREENCHER] | [captura] |
+| Antes | `b1c0a5`, "Release com problema: Versao B publicada por engano" (13:25) | `img/etapa4-rollback-antes.png`, `img/etapa4-rollback-antes-pagina.png` |
+| Depois do rollback | `3c0ce6`, versão publicada pelo GitHub Actions (12:27), restaurada às 13:29 | `img/etapa4-rollback-depois.png`, `img/etapa4-rollback-historico.png` |
+
+Para simular uma release com problema, a Versão B foi publicada por engano no canal live e depois revertida pelo console:
+
+![Histórico antes do rollback](img/etapa4-rollback-antes.png)
+
+![Produção com a release errada](img/etapa4-rollback-antes-pagina.png)
+
+![Produção depois do rollback](img/etapa4-rollback-depois.png)
+
+![Histórico de versões com o rollback](img/etapa4-rollback-historico.png)
 
 **Commit:** [`30e1c41`](https://github.com/jpnunes2210/semana5-cicd/commit/30e1c41)
 
@@ -178,11 +223,17 @@ Esses testes rodam no CI (job `test-rules`) com `firebase emulators:exec`.
 - PRs vindos de fork são ignorados, porque não têm acesso ao secret.
 - `firebase init hosting:github` foi usado só para criar a conta de serviço e o secret; os workflows gerados por ele não sobrescreveram os do repositório.
 
-**Preview em PR:** a action `FirebaseExtended/action-hosting-deploy@v0` publica num canal com expiração de 7 dias e comenta a URL no PR. [PREENCHER] link do PR e do comentário.
+**Preview em PR:** a action `FirebaseExtended/action-hosting-deploy@v0` publica num canal com expiração de 7 dias e comenta a URL no PR. No [PR #1](https://github.com/jpnunes2210/semana5-cicd/pull/1) o bot comentou https://semana6-jpnunes--pr1-teste-preview-qa78c8eo.web.app, e o preview foi usado para validar a correção da config antes do merge.
 
-**Deploy no merge:** `channelId: live`. [PREENCHER] link do run.
+![PR com o comentário do bot](img/etapa5-pr-preview.png)
 
-**Teste de fumaça:** `curl --fail --retry 5` na URL publicada e `grep "Painel DevOps"` no HTML. No PR a URL vem da saída `details_url` da action; no merge é `https://<projeto>.web.app/`, porque a action não preenche saídas no deploy live. [PREENCHER] link do job verde.
+![Diff do PR](img/etapa5-pr-diff.png)
+
+![Preview com os itens](img/etapa5-preview-itens.png)
+
+**Deploy no merge:** `channelId: live`. Runs: https://github.com/jpnunes2210/semana5-cicd/actions/workflows/firebase-hosting-merge.yml
+
+**Teste de fumaça:** `curl --fail --retry 5` na URL publicada e `grep "Painel DevOps"` no HTML. No PR a URL vem da saída `details_url` da action; no merge é `https://<projeto>.web.app/`, porque a action não preenche saídas no deploy live. Jobs `smoke-test` verdes nos runs de https://github.com/jpnunes2210/semana5-cicd/actions/workflows/firebase-hosting-merge.yml e https://github.com/jpnunes2210/semana5-cicd/actions/workflows/firebase-hosting-pull-request.yml
 
 **Reflexão sobre a chave JSON**
 
@@ -225,7 +276,9 @@ Fontes: [Cloud Run pricing](https://cloud.google.com/run/pricing), [Cloud SQL pr
 
 ## 9. Custo zero e limites
 
-**Plano:** Spark, sem cartão cadastrado e sem botão de upgrade clicado. [PREENCHER] captura de Uso e faturamento.
+**Plano:** Spark, sem cartão cadastrado e sem botão de upgrade clicado.
+
+![Plano Spark](img/etapa1-spark.png)
 
 **Cotas do Spark relevantes e uso estimado**
 
@@ -237,7 +290,9 @@ Fontes: [Cloud Run pricing](https://cloud.google.com/run/pricing), [Cloud SQL pr
 | Firestore: leituras | 50 mil por dia | 3 leituras por visita |
 | Firestore: gravações | 20 mil por dia | 3 (pelo console) |
 
-[PREENCHER] captura da aba Uso do Firestore.
+Aba Uso do Firestore nas últimas 24 horas: 119 leituras, 13 gravações e 14 exclusões, muito abaixo das cotas diárias.
+
+![Uso do Firestore](img/etapa6-uso-firestore.png)
 
 **Serviços NÃO habilitados:** Cloud Functions, Cloud Storage, App Hosting, Cloud Run, Cloud SQL, Artifact Registry, Secret Manager, Cloud Build, Compute Engine, Authentication por telefone e Firebase Studio.
 
@@ -253,8 +308,8 @@ Fontes: [Cloud Run pricing](https://cloud.google.com/run/pricing), [Cloud SQL pr
 | `npm run build:static` (modos `api` e `firestore` + emulador) | `out/` gerado |
 | `firebase emulators:exec --only hosting` | `/` 200, `/api/health/` 404 |
 | `actionlint .github/workflows/*.yml` | sem erros |
-| `firebase emulators:exec --only firestore "npm --prefix frontend run test:rules"` | [PREENCHER] 4 testes OK |
-| `curl -I https://semana6-jpnunes.web.app` | [PREENCHER] |
+| `firebase emulators:exec --only firestore --project demo-regras "npm --prefix frontend run test:rules"` | 4 testes OK |
+| `curl -I https://semana6-jpnunes.web.app` | `HTTP/2 200` |
 
 **Limitações conhecidas**
 
@@ -272,3 +327,7 @@ Fontes: [Cloud Run pricing](https://cloud.google.com/run/pricing), [Cloud SQL pr
 | 3 | [`4581c97`](https://github.com/jpnunes2210/semana5-cicd/commit/4581c97) | Emuladores, fonte de dados por variável, regras de `items`, scripts de semente e testes de regras |
 | 4 | [`30e1c41`](https://github.com/jpnunes2210/semana5-cicd/commit/30e1c41) | Versão B por variável, scripts de deploy de produção e de canal, roteiro de rollback |
 | 5 | [`0a396a9`](https://github.com/jpnunes2210/semana5-cicd/commit/0a396a9) | Workflows de preview em PR e deploy no merge, com qualidade, concurrency e teste de fumaça |
+| 3 | [`0548085`](https://github.com/jpnunes2210/semana5-cicd/commit/0548085) | Emulador de Hosting na porta 5002 (a 5000 é usada pelo AirPlay no macOS) |
+| 3 | [`8c3a1e9`](https://github.com/jpnunes2210/semana5-cicd/commit/8c3a1e9) | Dados semente do emulador exportados em `firebase/seed` |
+| 4 e 5 | [`161bdd9`](https://github.com/jpnunes2210/semana5-cicd/commit/161bdd9) | Config web do Firebase preenchida (PR #1) |
+| 5 | [`56445cf`](https://github.com/jpnunes2210/semana5-cicd/commit/56445cf) | Subtítulo "Semana 6", usado para validar o preview do PR #1 |

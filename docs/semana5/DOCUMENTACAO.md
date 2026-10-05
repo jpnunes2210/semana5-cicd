@@ -1,11 +1,11 @@
 # Semana 5 - Containerizacao e CI/CD
 
-> Itens marcados com **[PREENCHER]** dependem de execução na máquina ou na conta do GitHub (capturas, links de runs e tamanhos medidos). O restante já está validado.
+> Evidências coletadas em 05/10/2026. As capturas ficam em `docs/semana5/img/`.
 
 ## 1. Identificacao
 
-- **Equipe:** [PREENCHER]
-- **Integrantes:** João Paulo Barbosa Pereira Nunes, [PREENCHER]
+- **Formato:** trabalho individual
+- **Integrante:** João Paulo Barbosa Pereira Nunes
 - **Repositório:** https://github.com/jpnunes2210/semana5-cicd
 - **Descrição:** aplicação desacoplada Django + Next.js + PostgreSQL + Nginx. O backend expõe `GET /api/health/` em JSON e o frontend consome esse endpoint no navegador. O projeto foi containerizado para desenvolvimento e produção, com CI fail-fast no GitHub Actions e publicação das imagens de produção no GitHub Container Registry (GHCR).
 
@@ -71,9 +71,21 @@ O volume anônimo `-v /app/node_modules` impede que a pasta vazia do host escond
 
 **Evidências**
 
-- [PREENCHER] Captura do navegador em `localhost:3000` com os três itens.
-- [PREENCHER] Captura após editar um item em `backend/api/views.py`: o runserver recarrega sozinho e a página mostra o texto novo sem `docker build`.
-- [PREENCHER] Captura após editar o título em `frontend/app/page.js`: hot reload sem rebuild.
+Frontend em `localhost:3000` consumindo o backend, os dois em containers isolados:
+
+![Frontend com os três itens](img/etapa1-frontend.png)
+
+Depois de editar um item em `backend/api/views.py`, o runserver recarregou sozinho e a página mostrou o texto novo, sem `docker build`:
+
+![Reload do backend](img/etapa1-reload-backend.png)
+
+Depois de editar o título em `frontend/app/page.js`, o hot reload do Next.js atualizou a página sem rebuild:
+
+![Hot reload do frontend](img/etapa1-reload-frontend.png)
+
+As duas edições aplicadas ao mesmo tempo:
+
+![Backend e frontend editados](img/etapa1-reload-ambos.png)
 
 **Commit:** [`7f44842`](https://github.com/jpnunes2210/semana5-cicd/commit/7f44842)
 
@@ -109,8 +121,13 @@ docker compose ps                 # db com status (healthy)
 curl http://localhost:8000/api/health/
 ```
 
-- [PREENCHER] Saída de `docker compose ps` mostrando `db` como `healthy`.
-- [PREENCHER] Captura do frontend em `localhost:3000` consumindo a API.
+`docker compose ps` com o `db` em `healthy`:
+
+![docker compose ps](img/etapa2-compose-ps.png)
+
+Frontend da stack do Compose consumindo a API:
+
+![Frontend via Compose](img/etapa2-frontend.png)
 
 **Commit:** [`959098f`](https://github.com/jpnunes2210/semana5-cicd/commit/959098f)
 
@@ -155,10 +172,14 @@ A correção final é a própria `main`, com as duas trilhas verdes.
 
 **Evidências**
 
-- [PREENCHER] Link do run da `failfast/lint` (vermelho no lint, build e test cinzas).
-- [PREENCHER] Link do run da `failfast/build`.
-- [PREENCHER] Link do run da `failfast/test`.
-- [PREENCHER] Link do run verde da `main`.
+- Runs da `failfast/lint` (vermelho no lint, build e test pulados): https://github.com/jpnunes2210/semana5-cicd/actions?query=branch%3Afailfast%2Flint
+- Runs da `failfast/build`: https://github.com/jpnunes2210/semana5-cicd/actions?query=branch%3Afailfast%2Fbuild
+- Runs da `failfast/test`: https://github.com/jpnunes2210/semana5-cicd/actions?query=branch%3Afailfast%2Ftest
+- Runs verdes da `main`: https://github.com/jpnunes2210/semana5-cicd/actions/workflows/ci.yml?query=branch%3Amain
+
+Visão geral da aba Actions logo após o push: os três runs de fail-fast vermelhos e os runs da `main` verdes.
+
+![Runs do GitHub Actions](img/etapa3-actions-runs.png)
 
 **Commit:** [`c8e4905`](https://github.com/jpnunes2210/semana5-cicd/commit/c8e4905)
 
@@ -199,7 +220,16 @@ docker run --rm --entrypoint sh s5-frontend:prod -c "command -v npm || echo sem 
 
 Validado fora do Docker: Gunicorn com `DEBUG=False` respondendo `/api/health/` e servindo `/static/admin/css/base.css` (200); `node server.js` do standalone respondendo 200.
 
-**Tamanho final das imagens:** [PREENCHER com a saída do `docker images`]. Estimativa do frontend: cerca de 90 a 110 MB.
+**Tamanho final das imagens** (medido com `docker images` no Docker Desktop):
+
+| Imagem | Desenvolvimento | Produção |
+|---|---|---|
+| frontend | 1,63 GB | **117 MB** |
+| backend | 313 MB | **198 MB** |
+
+O frontend de produção ficou abaixo do limite de 150 MB, uma redução de mais de 90% em relação à imagem de desenvolvimento. Os dois `whoami` retornaram `nextjs` e `django`.
+
+![docker images e whoami](img/etapa4-imagens.png)
 
 **Commit:** [`f50bbae`](https://github.com/jpnunes2210/semana5-cicd/commit/f50bbae)
 
@@ -243,8 +273,17 @@ docker compose -f docker-compose-prod.yml ps     # só nginx com portas publicad
 curl -I http://localhost:8000/api/health/        # deve falhar: porta não publicada
 ```
 
-- [PREENCHER] Saída do `docker compose -f docker-compose-prod.yml ps`.
-- [PREENCHER] Captura do navegador em `https://localhost` com os itens (aceitando o certificado autoassinado).
+`docker compose -f docker-compose-prod.yml ps`: só o `nginx` publica portas.
+
+![Compose de produção](img/etapa5-compose-prod-ps.png)
+
+Testes com `curl`: 301 de HTTP para HTTPS, JSON da API via Nginx e porta 8000 inacessível pelo host.
+
+![Testes com curl](img/etapa5-curls.png)
+
+Navegador em `https://localhost` com o certificado autoassinado:
+
+![HTTPS local](img/etapa5-https.png)
 
 **Commit:** [`87a9121`](https://github.com/jpnunes2210/semana5-cicd/commit/87a9121)
 
@@ -280,9 +319,15 @@ ghcr.io/jpnunes2210/semana5-cicd-frontend:<github.sha>
 
 **Evidências**
 
-- [PREENCHER] Link do run da `main` com os 8 jobs verdes.
-- [PREENCHER] Links dos pacotes: `https://github.com/jpnunes2210/semana5-cicd/pkgs/container/semana5-cicd-backend` e `...-frontend`.
-- [PREENCHER] Saída de `docker pull ghcr.io/jpnunes2210/semana5-cicd-frontend:latest`.
+- Runs do CI na `main` (8 jobs verdes, incluindo os deploys): https://github.com/jpnunes2210/semana5-cicd/actions/workflows/ci.yml?query=branch%3Amain
+- Pacotes públicos: [semana5-cicd-backend](https://github.com/users/jpnunes2210/packages/container/package/semana5-cicd-backend) e [semana5-cicd-frontend](https://github.com/users/jpnunes2210/packages/container/package/semana5-cicd-frontend)
+- `docker pull` da imagem publicada. Como a imagem é `linux/amd64` (arquitetura dos runners do GitHub) e o Mac de teste é `arm64`, o pull usou `--platform linux/amd64`:
+
+```bash
+docker pull --platform linux/amd64 ghcr.io/jpnunes2210/semana5-cicd-frontend:latest
+```
+
+![docker pull do GHCR](img/etapa6-ghcr-pull.png)
 
 **Commit:** [`1553d55`](https://github.com/jpnunes2210/semana5-cicd/commit/1553d55)
 
@@ -307,6 +352,7 @@ ghcr.io/jpnunes2210/semana5-cicd-frontend:<github.sha>
 - Certificado autoassinado: o navegador mostra aviso; em produção real seria Let's Encrypt.
 - As migrações rodam no entrypoint do backend. Com várias réplicas, o ideal é um job de migração separado.
 - O `next dev` usa polling (`WATCHPACK_POLLING`) para o hot reload funcionar em bind mounts no Windows e no macOS, o que gasta um pouco mais de CPU.
+- As imagens do GHCR são publicadas só para `linux/amd64`. Em Macs com chip Apple é preciso `--platform linux/amd64` (o Docker Desktop emula). Publicar também `linux/arm64` é uma linha no `build-push-action`, mas deixa o build mais lento.
 
 **Checklist final**
 
