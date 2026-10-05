@@ -93,7 +93,7 @@ Localmente, com `firebase emulators:exec --only hosting`: `GET /` 200 com "Paine
 
 ## 5. Etapa 3 - Emulator Suite
 
-**Configuração dos emuladores** (`firebase.json`): Hosting 5000, Firestore 8080, UI 4000, `singleProjectMode`.
+**Configuração dos emuladores** (`firebase.json`): Hosting 5002, Firestore 8080, UI 4000, `singleProjectMode`.
 
 **Fonte de dados**
 
@@ -131,7 +131,7 @@ Esses testes rodam no CI (job `test-rules`) com `firebase emulators:exec`.
 
 **Leitura permitida / escrita negada:**
 
-- [PREENCHER] Captura de `localhost:5000` listando os 3 itens vindos do emulador.
+- [PREENCHER] Captura de `localhost:5002` listando os 3 itens vindos do emulador.
 - [PREENCHER] Captura do botão "Testar escrita no Firestore" mostrando `Bloqueado: permission-denied`.
 - [PREENCHER] Captura de `localhost:4000` > Firestore > Requests com um `get`/`list` ALLOW e um `create` DENY.
 

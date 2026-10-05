@@ -150,7 +150,7 @@ node scripts/seed-emulator.mjs           # (1a vez, em outro terminal) cadastra 
 # Ctrl+C no primeiro terminal exporta os dados para firebase/seed (versione essa pasta)
 ```
 
-- Página: http://localhost:5000 (lista os itens do emulador)
+- Página: http://localhost:5002 (lista os itens do emulador)
 - UI: http://localhost:4000 (aba Firestore > Requests mostra leitura permitida e escrita negada)
 - Botão "Testar escrita no Firestore" na página: deve mostrar `Bloqueado: permission-denied`
 
